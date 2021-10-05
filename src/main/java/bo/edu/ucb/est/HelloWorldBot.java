@@ -12,9 +12,13 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class HelloWorldBot extends TelegramLongPollingBot {
+    private static final String botUserName = "atm_naomi_bot";
+    private static final String token = "2047368272:AAFbG-sb2ByB2Hl13pd0CtaGNAt1db3oVOg";
     private int numeroDeCuenta = 100;
     private int mensaje=1;
     private String nombre;
@@ -27,25 +31,17 @@ public class HelloWorldBot extends TelegramLongPollingBot {
     private Cuenta cuentaSeleccionada;
     private String [] mensajesBienvenida = {"Bienvenido al Banco de la Fortuna. 🌿","He notado que aún no eres cliente, procedamos a registrarte","¿Cuál es tu nombre completo?"};
     private String [] mensajesBienvenidaExisteCliente = {"Hola de nuevo","Solo por seguridad, ¿Cuál es tu PIN?"};
-    private String [] mensajesMenu = {"Bienvenido","Elige una opcion:","\n1.Ver saldo\n2.Retirar dinero\n3.Depositar dinero\n4.Crear cuenta\n5.Salir"};
-
-    @Override
-    public String getBotUsername() {
-        return "atm_naomi_bot";
-    }
-
-    @Override
-    public String getBotToken() {
-        return "2047368272:AAFbG-sb2ByB2Hl13pd0CtaGNAt1db3oVOg";
-    }
-
+    private String [] mensajesMenu = {"Ver saldo","Retirar dinero","Depositar dinero","Crear cuenta","Salir"};
+    private String [] mensajesMenuQuerys={"1","2","3","4","5"};
+    Map<Cliente, Integer> listaUsuarios = new HashMap<Cliente, Integer>();
     @Override
     public void onUpdateReceived(Update update) {
-        Message mensajeEntrante = update.getMessage();
-        System.out.println(mensajeEntrante.getText()+"\nMensaje recibido: "+update.toString());
-        String idChat = mensajeEntrante.getChatId().toString();
-        Cliente clienteActual = banco.obtenerCliente(idChat);
-        if(update.hasMessage()) { // Verificamos que tenga mensaje
+
+        System.out.println("Mensaje recibido: "+update.toString());
+        if (update.hasMessage()) {
+            Message mensajeEntrante = update.getMessage();
+            String idChat = mensajeEntrante.getChatId().toString();
+            Cliente clienteActual = banco.obtenerCliente(idChat);
             switch (mensaje){
                 case 1:
                     if(clienteActual!=null){
@@ -64,24 +60,26 @@ public class HelloWorldBot extends TelegramLongPollingBot {
                             enviarMensajes(idChat,new String[] {"Lo siento, el codigo es incorecto"});
                             enviarMensajes(idChat,mensajesBienvenidaExisteCliente);
                         }else{
-                            enviarMensajes(idChat,mensajesMenu);
+                            botones("Bienvenido "+nombre+"\nElija una opcion",idChat,mensajesMenu,mensajesMenuQuerys);
+                            mensaje++;
                         }
                     }else{
                         enviarMensajes(idChat,new String[] {"Por favor elige un PIN de seguridad, este te será requerido cada que ingreses al sistema"});
+                        mensaje++;
                     }
-                    mensaje++;
                     break;
                 case 3:
                     if(clienteActual!=null){
                         opcionMenu = update.getMessage().getText();
                         if(opcionMenu.equals("1")||opcionMenu.equals("2")||opcionMenu.equals("3")) {
-                            enviarMensajes(idChat,new String[] {listaCuentas(banco.obtenerCliente(idChat))});
+                            listaCuentas(clienteActual);
                             mensaje=6;
                         }else if(opcionMenu.equals("4")) {
-                            enviarMensajes(idChat,new String[] {"Seleccione la moneda:\n1. Dolares\n2. Bolivianos"});
+                            String [] lista = {"Dólares","Bolivianos"};
+                            botones("\uD83D\uDCB0 Seleccione la moneda: ",idChat,lista,lista);
                             mensaje=4;
                         }else {
-                            enviarMensajes(idChat,mensajesMenu);
+                            botones("Bienvenido "+nombre+"\nElija una opcion",idChat,mensajesMenu,mensajesMenuQuerys);
                             mensaje=3;
                         }
                     }else{
@@ -106,9 +104,7 @@ public class HelloWorldBot extends TelegramLongPollingBot {
                         enviarMensajes(idChat,new String[] {"Ingrese la opcion correcta"});
                     }
                     mensaje=5;
-                    enviarMensajes(idChat,new String[] {"Seleccione el tipo de cuenta:\n1. Caja de ahorros\n2. Cuenta corriente"});
-                    mensaje=5;
-                    break;
+
                 case 5:
                     try{
                         int tipo = Integer.parseInt(update.getMessage().getText());
@@ -126,7 +122,7 @@ public class HelloWorldBot extends TelegramLongPollingBot {
                     banco.obtenerCliente(idChat).agregarCuenta(new Cuenta(moneda,numeroCuenta,tipoCuenta,0));
                     enviarMensajes(idChat,new String[] {"Se le ha creado una cuenta en "+moneda+" con saldo cero, cuyo numero es "+numeroCuenta});
                     numeroDeCuenta++;
-                    enviarMensajes(idChat,mensajesMenu);
+                    botones("Bienvenido "+nombre+"\nElija una opcion",idChat,mensajesMenu,mensajesMenuQuerys);
                     mensaje=3;
                     break;
                 case 6:
@@ -136,7 +132,7 @@ public class HelloWorldBot extends TelegramLongPollingBot {
                     enviarMensajes(idChat,new String[] {"El saldo actual es: "+cuentaSeleccionada.getSaldo()});
                     switch (opcionMenu){
                         case "1":
-                            enviarMensajes(idChat,mensajesMenu);
+                            botones("Bienvenido "+nombre+"\nElija una opcion",idChat,mensajesMenu,mensajesMenuQuerys);
                             mensaje = 3;
                             break;
                         case "2":
@@ -160,21 +156,91 @@ public class HelloWorldBot extends TelegramLongPollingBot {
                     }
                     enviarMensajes(idChat,new String[] {"Transaccion realizada correctamente!"});
                     mensaje=3;
-                    enviarMensajes(idChat,mensajesMenu);
+                    botones("Bienvenido "+nombre+"\nElija una opcion",idChat,mensajesMenu,mensajesMenuQuerys);
                     break;
+            }
+        }
+        else if(update.hasCallbackQuery()) {
+            String idChat = update.getCallbackQuery().getMessage().getChatId()+"";
+            Cliente clienteActual = banco.obtenerCliente(idChat);
+            switch (mensaje){
+                case 3:
+                    opcionMenu = update.getCallbackQuery().getData();
+                    if(opcionMenu.equals("1")||opcionMenu.equals("2")||opcionMenu.equals("3")) {
+                        listaCuentas(clienteActual);
+                        mensaje=6;
+                    }else if(opcionMenu.equals("4")) {
+                        String [] lista = {"Dólares","Bolivianos"};
+                        botones("\uD83D\uDCB0 Seleccione la moneda: ",idChat,lista,lista);
+                        mensaje=4;
+                    }else {
+                        enviarMensajes(idChat,mensajesBienvenidaExisteCliente);
+                        mensaje=2;
+                    }
+                    break;
+                case 4:
+                    moneda = update.getCallbackQuery().getData();
+                    String listaMensajes[] ={"Caja de ahorros","Cuenta corriente"};
+                    botones("Seleccione el tipo de cuenta",idChat,listaMensajes,listaMensajes);
+                    mensaje=5;
+                    break;
+                case 5:
+                    tipoCuenta = update.getCallbackQuery().getData();
+                    String numeroCuenta = numeroDeCuenta+"";
+                    banco.obtenerCliente(idChat).agregarCuenta(new Cuenta(moneda,numeroCuenta,tipoCuenta,0));
+                    enviarMensajes(idChat,new String[] {"Se le ha creado una cuenta en "+moneda+" con saldo cero, cuyo numero es "+numeroCuenta});
+                    numeroDeCuenta++;
+                    botones("Bienvenido "+nombre+"\nElija una opcion",idChat,mensajesMenu,mensajesMenuQuerys);
+                    mensaje=3;
+                    break;
+                case 6:
+                    int nroCuenta = Integer.parseInt(update.getCallbackQuery().getData());
+                    Cliente cliente = banco.obtenerCliente(idChat);
+                    cuentaSeleccionada = cliente.getCuentas().get(nroCuenta-1);
+                    enviarMensajes(idChat,new String[] {"El saldo actual es: "+cuentaSeleccionada.getSaldo()});
+                    switch (opcionMenu){
+                        case "1":
+                            botones("Bienvenido "+nombre+"\nElija una opcion",idChat,mensajesMenu,mensajesMenuQuerys);
+                            mensaje = 3;
+                            break;
+                        case "2":
+                            enviarMensajes(idChat,new String[] {"Ingrese el monto a retirar"});
+                            mensaje=7;
+                            opcionRetirar = 0;
+                            break;
+                        case "3":
+                            enviarMensajes(idChat,new String[] {"Ingrese el monto a depositar"});
+                            mensaje=7;
+                            opcionRetirar=1;
+                            break;
+                    }
+                    break;
+
             }
         }
     }
 
-    private String listaCuentas(Cliente cliente){
-        String listadoCuentasContenido = "Seleccione una opción:";
+    @Override
+    public String getBotUsername() {
+        return botUserName;
+    }
+
+    @Override
+    public String getBotToken() {
+        return token;
+    }
+
+    private void listaCuentas(Cliente cliente){
+        ArrayList<String> listaContenido = new ArrayList<>();
+        ArrayList<String> listaQuerys = new ArrayList<>();
         for ( int i = 0 ; i < cliente.getCuentas().size() ; i ++ ) {
             Cuenta cuenta = cliente.getCuentas().get(i);
-            listadoCuentasContenido +=( "\n"+(i + 1) + ". Cuenta " + cuenta.getNroCuenta()
-                    + "-->" + cuenta.getTipo());
+            listaContenido.add((i + 1) + ". Cuenta " + cuenta.getNroCuenta() + "-->" + cuenta.getTipo());
+            listaQuerys.add(i+1+"");
         }
-        return listadoCuentasContenido;
+        botones("Seleccione una cuenta",cliente.getIdUsuario(),listaContenido.toArray(new String[listaContenido.size()]),listaQuerys.toArray(new String[listaQuerys.size()]));
     }
+
     private void enviarMensajes(String idChat, String [] mensajes){
         SendMessage mensajeAEnviar = new SendMessage();
         mensajeAEnviar.setChatId(idChat);
@@ -185,6 +251,31 @@ public class HelloWorldBot extends TelegramLongPollingBot {
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
+        }
+    }
+    public void botones(String mensajeInicial,String idChat, String [] mensajes, String [] dataCallBackQuery){
+        SendMessage message = new SendMessage();
+        message.setChatId(idChat);
+        message.setText(mensajeInicial);
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+        message.setReplyMarkup(markupInline);
+        for (int i=0;i<mensajes.length;i++) {
+            List<InlineKeyboardButton> rowInline = new ArrayList<>();
+            String datoMensaje = mensajes[i];
+            String dataCallBack = dataCallBackQuery[i];
+            InlineKeyboardButton boton = new InlineKeyboardButton();
+            boton.setText(datoMensaje);
+            boton.setCallbackData(dataCallBack);
+            rowInline.add(boton);
+            rowsInline.add(rowInline);
+        }
+        markupInline.setKeyboard(rowsInline);
+        message.setReplyMarkup(markupInline);
+        try {
+            execute(message); // Sending our message object to user
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 }
