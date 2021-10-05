@@ -29,14 +29,14 @@ public class Banco {
         clientes.add(cliente);
     }
     
-    public Cliente buscarClientePorCodigo(String idUsuario, String pin) {
+    public boolean verificarCuenta(String idUsuario, String pin) {
         for ( int i = 0; i < clientes.size(); i++) {
             Cliente cli = clientes.get(i); // Sacando elemento por elemento
             if (cli.getIdUsuario().equals(idUsuario) && cli.getPinSeguridad().equals(pin)) {
-                return cli;
+                return true;
             }
         }
-        return null; //TODO Cambiar la funcionalidad por Optional para evitar NullPointerException
+        return false; //TODO Cambiar la funcionalidad por Optional para evitar NullPointerException
     }
     public Cliente obtenerCliente(String idUsuario){
         Cliente cliente = null;
