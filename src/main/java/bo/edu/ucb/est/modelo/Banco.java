@@ -8,36 +8,28 @@ package bo.edu.ucb.est.modelo;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author ecampohermoso
- */
 public class Banco {
     private String nombre;
     private List<Cliente> clientes;
     
     public Banco(String nombre) {
         this.nombre = nombre;
-        this.clientes = new ArrayList<Cliente>();
+        this.clientes = new ArrayList<>();
     }
 
-    public List<Cliente> getClientes() {
-        return this.clientes;
-    }
-    
     public void agregarCliente(Cliente cliente) {
         clientes.add(cliente);
     }
     
     public boolean verificarCuenta(String idUsuario, String pin) {
-        for ( int i = 0; i < clientes.size(); i++) {
-            Cliente cli = clientes.get(i); // Sacando elemento por elemento
+        for (Cliente cli : clientes) {
             if (cli.getIdUsuario().equals(idUsuario) && cli.getPinSeguridad().equals(pin)) {
                 return true;
             }
         }
-        return false; //TODO Cambiar la funcionalidad por Optional para evitar NullPointerException
+        return false;
     }
+
     public Cliente obtenerCliente(String idUsuario){
         Cliente cliente = null;
         for (Cliente datoCliente:clientes) {

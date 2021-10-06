@@ -30,10 +30,6 @@ public class Cuenta {
         }
         return resultado;
     }
-            
-    public String getMoneda() {
-        return moneda;
-    }
 
     public String getTipo() {
         return tipo;
@@ -47,4 +43,7 @@ public class Cuenta {
         return nroCuenta;
     }
 
+    public String getMoneda() {
+        return moneda;
+    }
 }
