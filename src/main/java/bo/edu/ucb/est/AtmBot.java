@@ -5,6 +5,8 @@ import bo.edu.ucb.est.modelo.Cliente;
 import bo.edu.ucb.est.modelo.Cuenta;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -18,10 +20,16 @@ import java.util.Map;
 public class AtmBot extends TelegramLongPollingBot {
     private int numeroDeCuenta = 100;
     private final Banco banco = new Banco("De la fortuna");
-    private final String[] mensajesBienvenida = {"🤑", "Bienvenido al Banco de la Fortuna \uD83C\uDF40", "He notado que aún no eres cliente, procedamos a registrarte", "¿Cuál es tu nombre completo?"};
+    private final String[] mensajesBienvenida = {"Bienvenido al Banco de la Fortuna \uD83C\uDF40", "He notado que aún no eres cliente, procedamos a registrarte", "¿Cuál es tu nombre completo?"};
     private final String[] mensajesBienvenidaExisteCliente = {"Hola de nuevo 😊 ", "Solo por seguridad, ¿Cuál es tu PIN?", "\uD83D\uDD10"};
     private final String[] monedas = {"Dólares", "Bolivianos"};
     private final String[] tipoCuentas = {"Caja de ahorros", "Cuenta corriente"};
+    private final String perrito= "CAACAgIAAxkBAAIFMWFeK9NbFDVKAYxoeExNYt9oeqqrAAI5AAOtZbwUdHz8lasybOohBA";
+    private final String cerezaWink= "CAACAgIAAxkBAAIFMGFeK8LbAAEXVKtGt3PeuEeOc-10_QACDQADwDZPE6T54fTUeI1TIQQ";
+    private final String perritoFiesta = "CAACAgIAAxkBAAIOfmFeLDPEsZyclAtRAdbRSkfLZ5w0AAJZAAOtZbwU9LtHF4nhLQkhBA";
+    private final String perritoPregunta="CAACAgIAAxkBAAIOmWFeLKnxFnhR6gne1FswPk4u3DqUAAJKAAOtZbwUiXsNXgiPepIhBA";
+    private final String cerezaAplausos = "CAACAgIAAxkBAAIOnmFeLO0HEc-4hI5C-FNUmJhWLJf0AAIdAAPANk8TXtim3EE93kghBA";
+    private final String abejita = "CAACAgIAAxkBAAIOzmFeLjHZSjjJBUvPlSsVLo440ensAAKkDwAClDVpSS6wuQZe7aKjIQQ";
     Map<Long, Integer> listaUsuarios = new HashMap<>();
     Map<Long, String[]> listaOpcionesSeleccionadas = new HashMap<>();
 
@@ -38,7 +46,9 @@ public class AtmBot extends TelegramLongPollingBot {
             String nombreEstablecido;
             switch (mensaje) {
                 case 1:
+                    enviarSticker(idChat,"CAACAgIAAxkBAAIFJmFeKUu1xGvj0uR5x1PyGpciSdYCAAIFAAPANk8T-WpfmoJrTXUhBA");
                     if (clienteActual != null) {
+
                         enviarMensajes(idChat, mensajesBienvenidaExisteCliente);
                     } else {
                         enviarMensajes(idChat, mensajesBienvenida);
@@ -49,7 +59,8 @@ public class AtmBot extends TelegramLongPollingBot {
                     String mensaje2 = mensajeEntrante.getText();
                     if (clienteActual != null) {
                         if (!banco.verificarCuenta(idChat, mensaje2)) {
-                            enviarMensajes(idChat, new String[]{"Lo siento, el pin es incorrecto", "😯"});
+                            enviarMensajes(idChat, new String[]{"Lo siento, el pin es incorrecto"});
+                            enviarSticker(idChat,perritoPregunta);
                             enviarMensajes(idChat, mensajesBienvenidaExisteCliente);
                         } else {
                             menu(idChat);
@@ -70,7 +81,8 @@ public class AtmBot extends TelegramLongPollingBot {
                         String pin = mensajeEntrante.getText();
                         Cliente cliente = new Cliente(idChat, nombreEstablecido, pin);
                         banco.agregarCliente(cliente);
-                        enviarMensajes(idChat, new String[]{"Genial " + cliente.getNombre() + "\nTe hemos registrado correctamente", "🤩"});
+                        enviarMensajes(idChat, new String[]{"Genial " + cliente.getNombre() + "\nTe hemos registrado correctamente"});
+                        enviarSticker(idChat,perrito);
                         enviarMensajes(idChat, mensajesBienvenidaExisteCliente);
                         listaUsuarios.put(idChatLong, 2);
                     }
@@ -111,7 +123,8 @@ public class AtmBot extends TelegramLongPollingBot {
                             }
                         }
                         if (flag == 0) {
-                            enviarMensajes(idChat, new String[]{"Transacción realizada correctamente!", "🥳"});
+                            enviarMensajes(idChat, new String[]{"Transacción realizada correctamente!"});
+                            enviarSticker(idChat,cerezaAplausos);
                             listaUsuarios.put(idChatLong, 3);
                             menu(idChat);
                         }
@@ -138,7 +151,8 @@ public class AtmBot extends TelegramLongPollingBot {
                         botones("\uD83D\uDCB0 Seleccione la moneda: ", idChat, monedas, monedas);
                         listaUsuarios.put(idChatLong, 4);
                     } else if(opcionMenu.equals("5")){
-                        enviarMensajes(idChat,new String[] {"Adiós "+clienteActual.getNombre()+" 👋","La próxima vez que quieras hablar conmigo presiona /start o solo manda un mensaje","😉"});
+                        enviarMensajes(idChat,new String[] {"Adiós "+clienteActual.getNombre()+" 👋","La próxima vez que quieras hablar conmigo presiona /start o solo manda un mensaje"});
+                        enviarSticker(idChat,cerezaWink);
                         listaUsuarios.put(idChatLong,1);
                     }else{
                         enviarMensajes(idChat, mensajesBienvenidaExisteCliente);//menu
@@ -157,7 +171,8 @@ public class AtmBot extends TelegramLongPollingBot {
                     String numeroCuenta = numeroDeCuenta + "";
                     banco.obtenerCliente(idChat).agregarCuenta(new Cuenta(monedaElegida, numeroCuenta, tipoCuenta, 0));
                     enviarMensajes(idChat, new String[]{"Se le ha creado una cuenta " + "(" + tipoCuenta + ") " + "en " + monedaElegida +
-                            " con saldo cero, cuyo numero es " + numeroCuenta, "🥳"});
+                            " con saldo cero, cuyo numero es " + numeroCuenta});
+                    enviarSticker(idChat,perritoFiesta);
                     numeroDeCuenta++;
                     menu(idChat);
                     listaUsuarios.put(idChatLong, 3);
@@ -209,6 +224,7 @@ public class AtmBot extends TelegramLongPollingBot {
     private void menu(String idChat) {
         String[] mensajesMenu = {"\uD83E\uDDFE Ver saldo", "\uD83D\uDCB3 Retirar dinero", "\uD83D\uDCB8 Depositar dinero", "➕ Crear cuenta", "\uD83D\uDEAA Salir"};
         String[] mensajesMenuQuery = {"1", "2", "3", "4", "5"};
+        enviarSticker(idChat,abejita);
         botones("Bienvenid@ " + banco.obtenerCliente(idChat).getNombre() + "🤠\nElija una opcion", idChat, mensajesMenu, mensajesMenuQuery);
     }
 
@@ -269,6 +285,16 @@ public class AtmBot extends TelegramLongPollingBot {
         message.setReplyMarkup(markupInline);
         try {
             execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+    public void enviarSticker(String idChat, String file_id){
+        SendSticker enviar = new SendSticker();
+        enviar.setChatId(idChat);
+        enviar.setSticker(new InputFile().setMedia(file_id));
+        try {
+            execute(enviar);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
